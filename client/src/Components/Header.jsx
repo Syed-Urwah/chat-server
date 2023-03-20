@@ -1,15 +1,20 @@
 import { faHeart } from '@fortawesome/free-regular-svg-icons'
 import { faArrowLeft, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
+import { UserContext } from '../Context/User/UserContext'
 import profilePic from '../assets/images/profile.jpg'
 
 export default function Header() {
 
     const [search, setSearch] = useState(false);
+    const {user} = useContext(UserContext)
+
+    
 
     return (
         <header className='h-[12%] mx-5 mt-7 sticky'>
+            
             {
                 !search ?
                     <div className='flex justify-between mx-3'>

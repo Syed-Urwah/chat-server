@@ -1,0 +1,2 @@
+bcrypt to convert password into salt + hash (Signup)
+jwt to saved a unique token for each user every time (login)
