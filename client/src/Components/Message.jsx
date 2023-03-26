@@ -22,7 +22,8 @@ export default function Message({sender, message}) {
   return (
     <div className={`flex items-end ${sender && 'justify-end mr-3'}`}>
         <img className='w-6 h-6' src={user.imgUrl} alt="" />
-        <p className={`text-xl font-light  ${sender ? 'bg-blue-500 text-white' : 'bg-[#f9f9f9]'} rounded-md px-4 py-2 max-w-[50%] break-all`}>{message.text}</p>
+        <p className={`text-xl font-light  ${sender ? 'bg-blue-500 text-white' : 'bg-[#f9f9f9]'} rounded-md px-4 py-2 max-w-[50%] break-all`}>{message.text}
+        </p>
     </div>
   )
 }

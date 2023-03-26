@@ -9,6 +9,12 @@ const messageSchema = mongoose.Schema({
     },
     text:{
         type: String
+    },
+    imgUrl:{
+        type: String
+    },
+    videoUrl:{
+        type: String
     }
 },{
     timestamps: true

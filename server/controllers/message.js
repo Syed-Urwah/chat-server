@@ -5,7 +5,9 @@ const newMessage = async (req, res) => {
         const newMsg = new Message({
             conversationId: req.params.conversationId,
             sender: req.user._id,
-            text: req.body.text
+            text: req.body.text,
+            imgUrl: req.body.imgUrl,
+            VideoUrl: req.body.videoUrl
         })
         newMsg.save();
         res.status(200).json(newMsg);
@@ -27,4 +29,14 @@ const getMessages = async (req, res) => {
 
 }
 
-module.exports = { newMessage , getMessages}
+const lastMessage = async (req, res) => {
+    try {
+        const message = await Message.find({conversationId: req.params.conversationId}).sort({ createdAt: -1 }).limit(1);
+        res.status(200).json(message)
+    } catch (error) {
+        res.status(500).json(error);
+    }
+
+}
+
+module.exports = { newMessage, getMessages, lastMessage }

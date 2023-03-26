@@ -16,6 +16,10 @@ const userSchema = mongoose.Schema({
     imgUrl:{
         type: String,
         default: 'https://firebasestorage.googleapis.com/v0/b/mytube-78ca0.appspot.com/o/profile.webp?alt=media&token=915d3ba6-45b0-4783-a164-b4711eb16287'
+    },
+    shortDescription:{
+        type: String,
+        default: 'SyedChat Only'
     }
 },{
     timestamps: true

@@ -28,4 +28,31 @@ const getConversations = async (req, res) => {
 
 }
 
-module.exports = { newConversation, getConversations }
+const getbyConversationId = async(req,res)=>{
+    try {
+        const conversation = await Conversation.findById(req.params.id);
+        res.status(200).json(conversation);
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
+const getByReciverId = async (req,res) =>{
+
+    try {
+        const reciver = req.query.reciever
+        const conversation = await Conversation.findOne({
+        members: {$in : [reciver, req.user._id]}
+    })
+    if(conversation){
+        res.status(200).json(conversation);
+    }else{
+        res.status(200).send('conversation not exist')
+    }
+    } catch (error) {
+        res.status(500).json(error)
+    }
+    
+}
+
+module.exports = { newConversation, getConversations , getbyConversationId, getByReciverId }
