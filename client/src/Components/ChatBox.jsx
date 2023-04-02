@@ -13,13 +13,14 @@ import io from "socket.io-client";
 
 export default function ChatBox({ socket, arrivalMessage, setArrivalMessage }) {
   const { conversationId } = useParams();
-  const { user } = useContext(UserContext);
+  const { user, searchedQuery } = useContext(UserContext);
   const scrollRef = useRef();
 
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [members, setMembers] = useState({});
   // const [arrivalMessage, setArrivalMessage] = useState(null)
+
 
   const fetchUser = async () => {
     const response = await axios.get(
@@ -61,7 +62,7 @@ export default function ChatBox({ socket, arrivalMessage, setArrivalMessage }) {
           },
         }
       );
-      console.log(response.data);
+      console.log(response.data.filter((msg)=>msg.text.includes('ur')));
       setMessages(response.data);
     } catch (error) {
       console.log(error.response);
@@ -103,32 +104,34 @@ export default function ChatBox({ socket, arrivalMessage, setArrivalMessage }) {
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages,searchedQuery]);
 
   useEffect(() => {
     fetchMessages();
     fetchUser();
-    // getReciverId();
-
-    // const recentMessages = document.getElementById('messages');
-    // recentMessages.scrollTo(0, recentMessages.scrollHeight);
   }, [conversationId]);
 
   
 
   return (
+    <>
     <section className="w-full xl:w-1/2 min-[870px]:w-2/3 bg-white text-black h-screen min-[870px]:block">
-      <Header />
+      <Header members={members}/>
 
       <div
         id="messages"
         className={`messages flex flex-col gap-4 sticky overflow-auto my-3 h-[70%]`}
       >
-        {messages.map((e) => (
+        {
+        messages.map((e) => (
+          searchedQuery === '' ?
           <div ref={scrollRef}>
             <Message key={e._id} sender={e.sender === user._id} message={e} />
           </div>
+           : e.text.toLowerCase().includes(searchedQuery) && <Message key={e._id} sender={e.sender === user._id} message={e} />
+           
         ))}
+       
       </div>
       {/* <hr className='border-[1.5px] mt-5'/> */}
       <div
@@ -167,5 +170,6 @@ export default function ChatBox({ socket, arrivalMessage, setArrivalMessage }) {
         </div>
       </div>
     </section>
+    </>
   );
 }

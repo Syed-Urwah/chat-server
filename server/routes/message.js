@@ -1,5 +1,5 @@
 const express = require('express');
-const { newMessage, getMessages, lastMessage } = require('../controllers/message');
+const { newMessage, getMessages, lastMessage, searchMessage } = require('../controllers/message');
 const verifyToken = require('../middle-wares/verifyToken');
 
 
@@ -12,5 +12,7 @@ router.post('/:conversationId', verifyToken, newMessage)
 router.get('/:conversationId', verifyToken, getMessages)
 
 router.get('/latestMessage/:conversationId', lastMessage)
+
+router.get('/searchMessage', searchMessage)
 
 module.exports = router
