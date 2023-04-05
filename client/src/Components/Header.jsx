@@ -4,14 +4,18 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useState, useContext, useEffect } from 'react'
 import { UserContext } from '../Context/User/UserContext'
 import profilePic from '../assets/images/profile.jpg'
-import { useParams } from 'react-router-dom'
+import { useLocation, useParams } from 'react-router-dom'
 import axios from 'axios'
+import RobotPic from '../assets/images/robot.png'
 
 export default function Header({members}) {
 
     const [search, setSearch] = useState(false);
     const [users, setUsers] = useState({});
-    const {user, setSearchedQuery, searchedQuery} = useContext(UserContext)
+    const [chatGPT, setChatGpt] = useState(false)
+
+    const {user, setSearchedQuery, searchedQuery} = useContext(UserContext);
+    const location = useLocation();
 
     
 
@@ -23,8 +27,13 @@ export default function Header({members}) {
       }
 
     useEffect(()=>{
-        members && fetchUser()
-    },[members])
+        if(location.pathname.split('/')[1] === 'chatGpt'){
+            setChatGpt(true)
+        }else{
+            setChatGpt(false)
+            members && fetchUser()
+        }
+    },[members, location])
 
     
 
@@ -35,8 +44,8 @@ export default function Header({members}) {
                 !search ?
                     <div className='flex justify-between mx-3'>
                         <div className="left flex items-center">
-                            <img src={users.imgUrl} className='w-14 h-14 rounded-full mr-4' alt="" />
-                            <h2 className='text-2xl'>{users.name}</h2>
+                            <img src={chatGPT ? RobotPic : users.imgUrl} className='w-14 h-14 rounded-full mr-4' alt="" />
+                            <h2 className='text-2xl'>{chatGPT ? 'ChatGpt' : users.name}</h2>
                         </div>
 
                         <div className="right flex items-center">

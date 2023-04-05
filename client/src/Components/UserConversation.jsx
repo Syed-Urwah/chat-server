@@ -5,9 +5,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import profilePic from '../assets/images/profile.jpg'
 import { UserContext } from '../Context/User/UserContext'
 import axios from 'axios'
+import RobotPic from '../assets/images/robot.png'
 import { format } from 'timeago.js'
 
-export default function UserConversation({ conversation, searchedUser, arrivalMessage, newMessage }) {
+export default function UserConversation({ conversation, searchedUser, arrivalMessage, newMessage, chatGPT }) {
 
     const { user } = useContext(UserContext)
     const navigate = useNavigate();
@@ -52,7 +53,7 @@ export default function UserConversation({ conversation, searchedUser, arrivalMe
     const handleConversation = async () => {
         if (conversation) {
              navigate(`/message/${conversation._id}`)
-        } else {
+        } else if(searchedUser) {
             try {
                 console.log('user')
                 const response = await axios({
@@ -70,6 +71,8 @@ export default function UserConversation({ conversation, searchedUser, arrivalMe
             }
 
 
+        }else{
+            navigate(`/chatGpt/${user._id}`)
         }
     }
 
@@ -96,21 +99,20 @@ export default function UserConversation({ conversation, searchedUser, arrivalMe
     useEffect(() => {
         conversation && fetchUser();
         conversation && fetchLastMessage();
-        // searchedUser && fetchConversation();
         searchedUser && console.log(searchedUser._id);
-        // console.log(conversation._id)
     }, [newMessage, searchedUser])
 
     return (
         <div onClick={handleConversation} className='flex gap-2 hover:cursor-pointer'>
-            <img src={conversation ? users.imgUrl : searchedUser.imgUrl} className='w-14 h-14 rounded-full' alt="" />
+            <img src={conversation ? users.imgUrl : searchedUser ? searchedUser.imgUrl : RobotPic} className='w-14 h-14 rounded-full' alt="" />
             <div className="user-details my-auto w-full">
                 <div className='flex justify-between items-center'>
-                    <h2 className='text-[#0191fc] text-xl'>{conversation ? users.name : searchedUser.name}</h2>
+                    <h2 className='text-[#0191fc] text-xl'>{
+                    conversation ? users.name : searchedUser ? searchedUser.name : 'ChatGPT'}</h2>
                     <p className='text-[#b9b0b0]'>{conversation && formatTime(lastMessage[0]?.createdAt)}</p>
                 </div>
                 <div className='flex justify-between items-center'>
-                    <p className='text-gray-700 text-sm'>{lastMessage[0]?.text.slice(0, 10)}</p>
+                    <p className='text-gray-700 text-sm'>{chatGPT ? 'Chat with me' : lastMessage[0]?.text.slice(0, 10)}</p>
                     <FontAwesomeIcon icon={faCheck} size='xs' className='text-[#0191fc]' />
                 </div>
             </div>

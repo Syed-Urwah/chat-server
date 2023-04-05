@@ -65,5 +65,39 @@ const login = async (req, res) => {
 
 }
 
+const GoogleAuth = async (req,res) => {
+
+    try {
+        const user = await User.findOne({email: req.body.email});
+    //login with Google
+    if(user){
+        const data = {
+            user
+        }
+        const token = jwt.sign(data,process.env.JWT_SECRET);
+        res.status(200).json({user, token});
+    }else{
+    //registration with google
+        const newUser = new User({
+            name: req.body.name,
+            email: req.body.email,
+            imgUrl: req.body.imgUrl
+        });
+        newUser.save();
+
+        const data = {
+            newUser
+        }
+
+        const token = jwt.sign(data, process.env.JWT_SECRET);
+        res.status(200).json({user: newUser, token})
+    }
+    } catch (error) {
+        res.status(500).json(error)
+    }
+
+    
+}
+
 //exporting all functions
-module.exports = { registration, login }
+module.exports = { registration, login, GoogleAuth }

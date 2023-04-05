@@ -3,11 +3,12 @@ import { faMicrophone } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios, { AxiosHeaders } from "axios";
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import Header from "./Header";
 import Message from "./Message";
 import { UserContext } from "../Context/User/UserContext";
 import io from "socket.io-client";
+import {Configuration, OpenAIApi} from 'openai'
 
 
 
@@ -15,11 +16,18 @@ export default function ChatBox({ socket, arrivalMessage, setArrivalMessage }) {
   const { conversationId } = useParams();
   const { user, searchedQuery } = useContext(UserContext);
   const scrollRef = useRef();
+  const location = useLocation();
 
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [members, setMembers] = useState({});
+  const [chatGpt, setChatGpt] = useState(false)
   // const [arrivalMessage, setArrivalMessage] = useState(null)
+
+  //openai
+  const openai = new OpenAIApi(new Configuration({
+    apiKey: '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'
+  }))
 
 
   const fetchUser = async () => {
@@ -62,44 +70,65 @@ export default function ChatBox({ socket, arrivalMessage, setArrivalMessage }) {
           },
         }
       );
-      console.log(response.data.filter((msg)=>msg.text.includes('ur')));
       setMessages(response.data);
     } catch (error) {
       console.log(error.response);
     }
   };
 
-  const handleSubmitMsg = async () => {
-    if (text.length > 0) {
-      try {
-        const response = await axios({
-          method: "post",
-          url: `http://localhost:8000/message/${conversationId}`,
-          headers: {
-            token: localStorage.getItem("token"),
-          },
-          data: {
-            text,
-          },
-        });
-        console.log(response.data);
-        // setMessages(messages.concat(response.data));
-      } catch (error) {
-        console.log(error.response);
-      }
-      //sending message to socket
-      const recieverId = await members?.find((id) => id !== user._id);
-      console.log(recieverId);
-      await socket.current.emit("sendMessage", {
-        senderId: user._id,
-        receiverId: recieverId,
-        text: text,
-        conversationId: conversationId,
+  const sendMessageToChatGpt = async () => {
+    try {
+      const response = await openai.createChatCompletion({
+        model: 'text-davinci-003',
+        messages: [{
+          role: 'user',
+          content: text
+        }]
       });
-      setText("");
-    } else {
-      alert("kindly write something");
+      console.log(response.data);
+    } catch (err) {
+      console.error(err);
     }
+  };
+
+  const handleSubmitMsg = async () => {
+    if(chatGpt){
+      //chatgpt chatCompletion
+      sendMessageToChatGpt()
+      
+    }else{
+      if (text.length > 0) {
+        try {
+          const response = await axios({
+            method: "post",
+            url: `http://localhost:8000/message/${conversationId}`,
+            headers: {
+              token: localStorage.getItem("token"),
+            },
+            data: {
+              text,
+            },
+          });
+          console.log(response.data);
+          // setMessages(messages.concat(response.data));
+        } catch (error) {
+          console.log(error.response);
+        }
+        //sending message to socket
+        const recieverId = await members?.find((id) => id !== user._id);
+        console.log(recieverId);
+        await socket.current.emit("sendMessage", {
+          senderId: user._id,
+          receiverId: recieverId,
+          text: text,
+          conversationId: conversationId,
+        });
+        setText("");
+      } else {
+        alert("kindly write something");
+      }
+    }
+    
   };
 
   useEffect(() => {
@@ -107,9 +136,16 @@ export default function ChatBox({ socket, arrivalMessage, setArrivalMessage }) {
   }, [messages,searchedQuery]);
 
   useEffect(() => {
-    fetchMessages();
-    fetchUser();
-  }, [conversationId]);
+    if(location.pathname.split('/')[1] === 'chatGpt'){
+      setChatGpt(true)
+      setMessages([])
+    }else{
+      setChatGpt(false)
+      fetchMessages();
+      fetchUser();
+    }
+    
+  }, [conversationId, location]);
 
   
 
