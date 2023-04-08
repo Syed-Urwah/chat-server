@@ -7,7 +7,7 @@ const newMessage = async (req, res) => {
             sender: req.user._id,
             text: req.body.text,
             imgUrl: req.body.imgUrl,
-            VideoUrl: req.body.videoUrl
+            videoUrl: req.body.videoUrl
         })
         newMsg.save();
         res.status(200).json(newMsg);

@@ -112,7 +112,9 @@ export default function UserConversation({ conversation, searchedUser, arrivalMe
                     <p className='text-[#b9b0b0]'>{conversation && formatTime(lastMessage[0]?.createdAt)}</p>
                 </div>
                 <div className='flex justify-between items-center'>
-                    <p className='text-gray-700 text-sm'>{chatGPT ? 'Chat with me' : lastMessage[0]?.text.slice(0, 10)}</p>
+                    {
+                        Object.keys(lastMessage).length > 0 && <p className='text-gray-700 text-sm'>{chatGPT ? 'Chat with me' : lastMessage[0]?.text.slice(0, 10) + '...'}</p>
+                    }
                     <FontAwesomeIcon icon={faCheck} size='xs' className='text-[#0191fc]' />
                 </div>
             </div>

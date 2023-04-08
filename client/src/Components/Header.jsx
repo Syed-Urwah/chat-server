@@ -27,13 +27,15 @@ export default function Header({members}) {
       }
 
     useEffect(()=>{
-        if(location.pathname.split('/')[1] === 'chatGpt'){
-            setChatGpt(true)
-        }else{
-            setChatGpt(false)
-            members && fetchUser()
-        }
-    },[members, location])
+        // if(location.pathname.split('/')[1] === 'chatGpt'){
+        //     setChatGpt(true)
+        // }else{
+        //     setChatGpt(false)
+        //     members && fetchUser()
+        // }
+
+        members && fetchUser();
+    },[members])
 
     
 

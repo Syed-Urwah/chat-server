@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import profilePic from '../assets/images/profile.webp'
 import axios from 'axios'
 import { UserContext } from '../Context/User/UserContext'
-import { auth, provider } from '../firebase.js'
-import { signInWithPopup } from 'firebase/auth'
+import { auth, GoogleProvider, FacebookProvider } from '../firebase.js'
+import { signInWithPopup, signInWithRedirect } from 'firebase/auth'
 import googleLogo from '../assets/images/google.png'
 import googleLogo2 from '../assets/images/google(2).png'
 
@@ -57,7 +57,7 @@ export default function Login() {
     const handleGoogleLogin = async (e) => {
         e.preventDefault();
         try {
-            const googleResponse = await signInWithPopup(auth, provider);
+            const googleResponse = await signInWithPopup(auth, GoogleProvider);
         console.log(googleResponse.user);
         const response = await axios({
             method: 'post',
@@ -76,6 +76,12 @@ export default function Login() {
             console.error(error);
         }
         
+    }
+
+    const handleFacebookLogin = async (e) =>{
+        e.preventDefault();
+        const FacebookResponse = await signInWithRedirect(auth, FacebookProvider);
+        console.log(FacebookResponse);
     }
 
 
@@ -109,6 +115,8 @@ export default function Login() {
                 <button onClick={handleGoogleLogin} className='flex items-center border-2 border-solid border-[#30303d] rounded-xl py-2 gap-4 w-80 justify-center hover:bg-white hover:text-black'>
                     <img id='hover-google' className='w-4 h-4' src={googleLogo2} alt="" /><p>Continue with Google</p>
                 </button>
+
+               
 
                 <Link to='/registration' className='text-blue-700'>Did'nt have account</Link>
             </form>

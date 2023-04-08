@@ -1,4 +1,4 @@
-import { faImage, faPaperPlane } from "@fortawesome/free-solid-svg-icons";
+import { faImage, faPaperPlane, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { faMicrophone } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios, { AxiosHeaders } from "axios";
@@ -8,7 +8,10 @@ import Header from "./Header";
 import Message from "./Message";
 import { UserContext } from "../Context/User/UserContext";
 import io from "socket.io-client";
-import {Configuration, OpenAIApi} from 'openai'
+import { Configuration, OpenAIApi } from 'openai'
+import { getStorage, ref, uploadBytesResumable, getDownloadURL, uploadBytes } from "firebase/storage";
+import { app, storage } from '../firebase.js'
+
 
 
 
@@ -20,8 +23,12 @@ export default function ChatBox({ socket, arrivalMessage, setArrivalMessage }) {
 
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
+  const [imgUrl, setImgUrl] = useState('');
+  const [videoUrl, setVideoUrl] = useState('')
   const [members, setMembers] = useState({});
   const [chatGpt, setChatGpt] = useState(false)
+  const [image, setImage] = useState("");
+  const [video, setVideo] = useState('');
   // const [arrivalMessage, setArrivalMessage] = useState(null)
 
   //openai
@@ -40,11 +47,13 @@ export default function ChatBox({ socket, arrivalMessage, setArrivalMessage }) {
 
   useEffect(() => {
     //getting message from socket
-    socket.current?.on("getMessage", ({ senderId, text, conversationId }) => {
+    socket.current?.on("getMessage", ({ senderId, text, imgUrl , videoUrl ,conversationId }) => {
       console.log(conversationId);
       setArrivalMessage({
         sender: senderId,
         text: text,
+        imgUrl: imgUrl,
+        videoUrl: videoUrl,
         conversationId: conversationId,
         createdAt: Date.now(),
       });
@@ -52,6 +61,8 @@ export default function ChatBox({ socket, arrivalMessage, setArrivalMessage }) {
 
     console.log("getting");
   }, []);
+
+ 
 
   useEffect(() => {
     arrivalMessage &&
@@ -92,11 +103,11 @@ export default function ChatBox({ socket, arrivalMessage, setArrivalMessage }) {
   };
 
   const handleSubmitMsg = async () => {
-    if(chatGpt){
+    if (chatGpt) {
       //chatgpt chatCompletion
       sendMessageToChatGpt()
-      
-    }else{
+
+    } else {
       if (text.length > 0) {
         try {
           const response = await axios({
@@ -107,9 +118,13 @@ export default function ChatBox({ socket, arrivalMessage, setArrivalMessage }) {
             },
             data: {
               text,
+              imgUrl,
+              videoUrl
             },
           });
           console.log(response.data);
+          setImgUrl('')
+          setVideoUrl('')
           // setMessages(messages.concat(response.data));
         } catch (error) {
           console.log(error.response);
@@ -121,6 +136,8 @@ export default function ChatBox({ socket, arrivalMessage, setArrivalMessage }) {
           senderId: user._id,
           receiverId: recieverId,
           text: text,
+          imgUrl: imgUrl,
+          videoUrl: videoUrl,
           conversationId: conversationId,
         });
         setText("");
@@ -128,84 +145,173 @@ export default function ChatBox({ socket, arrivalMessage, setArrivalMessage }) {
         alert("kindly write something");
       }
     }
-    
-  };
+
+  }
+
+  const handleFile = (e) => {
+    console.log(e.target.files[0].type.split('/')[0])
+    if (e.target.files[0].type.split('/')[0] === 'image') {
+      setVideo('')
+      setImage(e.target.files[0])
+      fileUpload(e.target.files[0], 'image')
+    } else {
+      console.log('video')
+      setImage('')
+      setVideo(e.target.files[0]);
+      fileUpload(e.target.files[0], 'video')
+    }
+  }
+
+  const fileUpload = (file, type) => {
+    // const storage = getStorage();
+    const fileName = new Date().getTime() + file.name
+    const storageRef = ref(storage);
+    const imageRef = ref(storage, 'images/' + fileName);
+    const videoRef = ref(storage, 'videos/' + fileName);
+
+    console.log(file)
+
+    // 'file' comes from the Blob or File API
+    if (type === 'image') {
+      uploadBytes(imageRef, file).then((snapshot) => {
+        console.log('Uploaded a blob or file!');
+        getDownloadURL(imageRef)
+          .then((url) => {
+            console.log(url)
+            setImgUrl(url);
+          })
+      });
+    } else {
+      uploadBytes(videoRef, file).then((snapshot) => {
+        console.log('Uploaded a blob or file!');
+        getDownloadURL(videoRef)
+          .then((url) => {
+            console.log(url);
+            setVideoUrl(url);
+          });
+      });
+    }
+
+
+
+  }
+
+  const sendImage = async (url) => {
+    try {
+      const response = await axios({
+        method: "post",
+        url: `http://localhost:8000/message/${conversationId}`,
+        headers: {
+          token: localStorage.getItem("token"),
+        },
+        data: {
+          imgUrl: url,
+        },
+      });
+      console.log(response.data);
+      // setMessages(messages.concat(response.data));
+    } catch (error) {
+      console.log(error.response);
+    }
+    //sending message to socket
+    // const recieverId = await members?.find((id) => id !== user._id);
+    // console.log(recieverId);
+    // await socket.current.emit("sendImage", {
+    //   senderId: user._id,
+    //   receiverId: recieverId,
+    //   imgUrl: imgUrl,
+    //   conversationId: conversationId,
+    // });
+  }
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages,searchedQuery]);
+  }, [messages, searchedQuery]);
 
   useEffect(() => {
-    if(location.pathname.split('/')[1] === 'chatGpt'){
+    if (location.pathname.split('/')[1] === 'chatGpt') {
       setChatGpt(true)
       setMessages([])
-    }else{
+    } else {
       setChatGpt(false)
       fetchMessages();
       fetchUser();
     }
-    
+
   }, [conversationId, location]);
 
-  
+
 
   return (
     <>
-    <section className="w-full xl:w-1/2 min-[870px]:w-2/3 bg-white text-black h-screen min-[870px]:block">
-      <Header members={members}/>
+      <section id="chat-box" className="w-full xl:w-1/2 min-[870px]:w-2/3 bg-white text-black h-screen min-[870px]:block">
+        <Header members={members} />
 
-      <div
-        id="messages"
-        className={`messages flex flex-col gap-4 sticky overflow-auto my-3 h-[70%]`}
-      >
         {
-        messages.map((e) => (
-          searchedQuery === '' ?
-          <div ref={scrollRef}>
-            <Message key={e._id} sender={e.sender === user._id} message={e} />
-          </div>
-           : e.text.toLowerCase().includes(searchedQuery) && <Message key={e._id} sender={e.sender === user._id} message={e} />
-           
-        ))}
-       
-      </div>
-      {/* <hr className='border-[1.5px] mt-5'/> */}
-      <div
-        className={`message-input fixed h-[13%] w-full xl:w-1/2 min-[870px]:w-2/3 `}
-      >
-        <div className="input w-11/12  mx-auto z-10">
-          {/* <FontAwesomeIcon
+          imgUrl || videoUrl ? <div className="image-viewer w-full h-[70%] bg-transparent flex justify-center items-center">
+                    <FontAwesomeIcon onClick={()=> {setImgUrl(''); setVideoUrl('')}} className="absolute top-[17%] xl:left-[27%] min-[870px]:left-[36%] left-[6%] hover:cursor-pointer fa-beat" icon={faXmark} size="2x" />
+                    {imgUrl ? <img src={imgUrl} className="w-1/2 h-3/4" alt="" /> : 
+                    <video controls src={videoUrl}></video>}
+                  </div> :
+
+            <div
+              id="messages"
+              className={`messages flex flex-col gap-4 sticky overflow-auto my-3 h-[70%]`}
+            >
+              {
+                messages.map((e) => (
+                  searchedQuery === '' ?
+                    <div ref={scrollRef}>
+                      <Message key={e._id} sender={e.sender === user._id} message={e} image={true} />
+                    </div>
+                    : e.text.toLowerCase().includes(searchedQuery) && <Message key={e._id} sender={e.sender === user._id} message={e} />
+
+                ))}
+
+            </div>
+        }
+
+
+
+
+
+        {/* <hr className='border-[1.5px] mt-5'/> */}
+        <div
+          className={`message-input fixed h-[13%] w-full xl:w-1/2 min-[870px]:w-2/3 `}
+        >
+          <div className="input w-11/12  mx-auto z-10">
+            {/* <FontAwesomeIcon
             size="xl"
             className="text-[#a6a2a4] absolute ml-[2%] mt-[1%] hover:cursor-pointer"
             icon={faMicrophone}
           /> */}
 
-          <textarea
-            onKeyUp={(e) =>
-              console.log(e.key === "Enter" && handleSubmitMsg(e))
-            }
-            id="story"
-            name="story"
-            onChange={(e) => setText(e.target.value)}
-            value={text}
-            className="w-full rounded-xl bg-[#f9f9f9] mx-auto pr-[6%] pl-4 text-black min:h-10"
-          ></textarea>
-          <label
-            htmlFor="file"
-            className="hover:cursor-pointer absolute right-[10%] mt-[1%] text-gray-600"
-          >
-            {/* <FontAwesomeIcon size="xl" icon={faImage} /> */}
-          </label>
-          <input type="file" name="file" id="file" className="hidden" />
-          <FontAwesomeIcon
-            onClick={handleSubmitMsg}
-            size="xl"
-            className="text-[#a6a2a4] absolute right-[6%] mt-[1%] hover:cursor-pointer"
-            icon={faPaperPlane}
-          />
+            <textarea
+              onKeyUp={(e) =>
+                console.log(e.key === "Enter" && handleSubmitMsg(e))
+              }
+              id="story"
+              name="story"
+              onChange={(e) => setText(e.target.value)}
+              value={text}
+              className="w-full rounded-xl bg-[#f9f9f9] mx-auto pr-[6%] pl-4 text-black min:h-10"
+            ></textarea>
+            <label
+              htmlFor="file"
+              className="hover:cursor-pointer absolute right-[10%] mt-[1%] text-gray-600"
+            >
+              <FontAwesomeIcon size="xl" icon={faImage} />
+            </label>
+            <input accept="image/*,video/*" type="file" name="file" id="file" className="hidden" onChange={handleFile} />
+            <FontAwesomeIcon
+              onClick={handleSubmitMsg}
+              size="xl"
+              className="text-[#a6a2a4] absolute right-[6%] mt-[1%] hover:cursor-pointer"
+              icon={faPaperPlane}
+            />
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
     </>
   );
 }

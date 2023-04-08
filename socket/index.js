@@ -28,13 +28,15 @@ io.on('connection', (socket) => {
     })
 
     //send and recieve message
-    socket.on('sendMessage' , ({senderId, receiverId, text, conversationId})=>{
+    socket.on('sendMessage' , ({senderId, receiverId, text, imgUrl , videoUrl ,conversationId})=>{
         const user = getUser(receiverId);
         const sender = getUser(senderId)
-        console.log(senderId);
-        user&&io.to(user.socketId).emit("getMessage", {senderId, text, conversationId});
-        sender&&io.to(sender.socketId).emit("getMessage", {senderId, text, conversationId});
+        console.log(imgUrl);
+        user&&io.to(user.socketId).emit("getMessage", {senderId, text, imgUrl , videoUrl ,conversationId});
+        sender&&io.to(sender.socketId).emit("getMessage", {senderId, text, imgUrl , videoUrl , conversationId});
     })
+
+    
 
     //send and recieve conversation
     socket.on('sendConversation', id =>{
