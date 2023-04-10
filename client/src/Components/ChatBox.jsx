@@ -1,4 +1,4 @@
-import { faImage, faPaperPlane, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faCircleNotch, faImage, faPaperPlane, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { faMicrophone } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios, { AxiosHeaders } from "axios";
@@ -29,6 +29,7 @@ export default function ChatBox({ socket, arrivalMessage, setArrivalMessage }) {
   const [chatGpt, setChatGpt] = useState(false)
   const [image, setImage] = useState("");
   const [video, setVideo] = useState('');
+  const [fileLoading , setFileLoading] = useState(false);
   // const [arrivalMessage, setArrivalMessage] = useState(null)
 
   //openai
@@ -125,6 +126,8 @@ export default function ChatBox({ socket, arrivalMessage, setArrivalMessage }) {
           console.log(response.data);
           setImgUrl('')
           setVideoUrl('')
+          setImage('');
+          setVideo('')
           // setMessages(messages.concat(response.data));
         } catch (error) {
           console.log(error.response);
@@ -163,6 +166,7 @@ export default function ChatBox({ socket, arrivalMessage, setArrivalMessage }) {
   }
 
   const fileUpload = (file, type) => {
+    setFileLoading(true);
     // const storage = getStorage();
     const fileName = new Date().getTime() + file.name
     const storageRef = ref(storage);
@@ -179,6 +183,7 @@ export default function ChatBox({ socket, arrivalMessage, setArrivalMessage }) {
           .then((url) => {
             console.log(url)
             setImgUrl(url);
+            setFileLoading(false);
           })
       });
     } else {
@@ -188,6 +193,7 @@ export default function ChatBox({ socket, arrivalMessage, setArrivalMessage }) {
           .then((url) => {
             console.log(url);
             setVideoUrl(url);
+            setFileLoading(false)
           });
       });
     }
@@ -224,6 +230,13 @@ export default function ChatBox({ socket, arrivalMessage, setArrivalMessage }) {
     // });
   }
 
+  function handleFileCancel(){
+    setImage('');
+    setVideo('');
+    setImgUrl('');
+    setVideoUrl('');
+  }
+
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, searchedQuery]);
@@ -248,10 +261,11 @@ export default function ChatBox({ socket, arrivalMessage, setArrivalMessage }) {
         <Header members={members} />
 
         {
-          imgUrl || videoUrl ? <div className="image-viewer w-full h-[70%] bg-transparent flex justify-center items-center">
-                    <FontAwesomeIcon onClick={()=> {setImgUrl(''); setVideoUrl('')}} className="absolute top-[17%] xl:left-[27%] min-[870px]:left-[36%] left-[6%] hover:cursor-pointer fa-beat" icon={faXmark} size="2x" />
-                    {imgUrl ? <img src={imgUrl} className="w-1/2 h-3/4" alt="" /> : 
-                    <video controls src={videoUrl}></video>}
+          image || video ? <div className="image-viewer w-full h-[70%] bg-transparent flex justify-center items-center">
+                    <FontAwesomeIcon onClick={handleFileCancel} className="absolute top-[17%] xl:left-[27%] min-[870px]:left-[36%] left-[6%] hover:cursor-pointer fa-beat" icon={faXmark} size="2x" />
+                    {fileLoading ? <FontAwesomeIcon size="2x" className="fa-spin" icon={faCircleNotch} /> :
+                    imgUrl ? <img src={imgUrl} className="w-1/2 h-3/4" alt="" /> : 
+                    <video className="w-1/2 h-3/4" controls src={videoUrl}></video>}
                   </div> :
 
             <div
