@@ -35,7 +35,7 @@ export default function Login() {
         try {
             const response = await axios({
                 method: 'post',
-                url: 'http://localhost:8000/auth/login',
+                url: 'https://syed-chat-server.vercel.app/api/auth/login',
                 data: {
                     email: email,
                     password: password
