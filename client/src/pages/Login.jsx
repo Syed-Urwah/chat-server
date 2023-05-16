@@ -35,7 +35,7 @@ export default function Login() {
         try {
             const response = await axios({
                 method: 'post',
-                url: 'https://syed-chat-server.vercel.app/api/auth/login',
+                url: 'http://localhost:8000/auth/login',
                 data: {
                     email: email,
                     password: password
@@ -61,7 +61,7 @@ export default function Login() {
         console.log(googleResponse.user);
         const response = await axios({
             method: 'post',
-            url: 'https://syed-chat-server.vercel.app/api/auth/google',
+            url: 'http://localhost:8000/auth/google',
             data:{
                 name: googleResponse.user.displayName,
                 email: googleResponse.user.email,

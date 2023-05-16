@@ -13,16 +13,14 @@ export default function Registration() {
   const [password, setpassword] = useState('')
   const [error, setError] = useState('');
 
-  function handlePassword(e){
-    
-  }
+  
 
   const handleRegistration = async (e) =>{
     e.preventDefault();
     try {
       const response = await axios({
       method: 'post',
-      url: 'https://syed-chat-server.vercel.app/api/auth/registration',
+      url: 'http://localhost:8000/auth/registration',
       data:{
         name: name,
         email: email,

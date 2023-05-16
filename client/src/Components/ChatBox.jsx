@@ -312,7 +312,7 @@ export default function ChatBox({ socket, arrivalMessage, setArrivalMessage }) {
             ></textarea>
             <label
               htmlFor="file"
-              className="hover:cursor-pointer absolute right-[10%] mt-[1%] text-gray-600"
+              className="hover:cursor-pointer absolute right-[14%] sm:right-[10%] mt-[1%] text-gray-600"
             >
               <FontAwesomeIcon size="xl" icon={faImage} />
             </label>
