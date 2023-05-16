@@ -9,7 +9,10 @@ const message = require('./routes/message')
 
 
 //connecting to mongodb
-mongoose.connect(process.env.MONGO_STRING)
+// mongoose.connect(process.env.MONGO_STRING)
+const uri = process.env.MONGO_CONNECTION_STRING;
+const client = new MongoClient(uri);
+
 
 const app = express();
 
@@ -25,6 +28,14 @@ app.use('/user', user);
 app.use('/conversation', conversation);
 app.use('/message', message);
 
-app.listen(8000, ()=>{
-    console.log('server started')
-})
+// app.listen(8000, ()=>{
+//     console.log('server started')
+// })
+
+client.connect(err => {
+    if(err){ console.error(err); return false;}
+    // connection to mongo is successful, listen for requests
+    app.listen(8000, () => {
+        console.log("listening for requests");
+    })
+});
